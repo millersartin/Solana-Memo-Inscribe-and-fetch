@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Memo Inscriber</title>
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --surface: #ffffff;
+            --surface-alt: #f8f9fa;
+            --border: #e2e8f0;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --success-bg: #c6f6d5;
+            --success-text: #2f855a;
+            --error-bg: #fed7d7;
+            --error-text: #c53030;
+            --info-bg: #bee3f8;
+            --info-text: #2b6cb0;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        .container {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        header { text-align: center; margin-bottom: 32px; }
+        h1 { color: var(--text-main); margin-bottom: 8px; font-size: 32px; letter-spacing: -0.5px; }
+        .subtitle { color: var(--text-muted); font-size: 16px; }
+
+        .wallet-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 32px;
+        }
+
+        .wallet-info { display: flex; align-items: center; gap: 12px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; transition: background 0.3s; }
+        .status-dot.connected { background: #48bb78; }
+        
+        .wallet-address {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.05);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn:active:not(:disabled) { transform: translateY(0); }
+        .btn:disabled { background: #cbd5e0; cursor: not-allowed; opacity: 0.7; }
+        .btn-full { width: 100%; padding: 12px; font-size: 16px; margin-top: 16px; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: var(--text-main); }
+
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: var(--text-main); }
+        
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--primary); }
+        textarea { min-height: 120px; resize: vertical; }
+
+        .meta-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 13px; color: var(--text-muted); }
+        
+        .toggle-label { display: flex; align-items: center; gap: 8px; cursor: pointer; -webkit-user-select: none; user-select: none; }
+        input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); }
+
+        .status {
+            margin-top: 24px;
+            padding: 16px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            display: none;
+            line-height: 1.5;
+        }
+        .status.success { background: var(--success-bg); color: var(--success-text); }
+        .status.error { background: var(--error-bg); color: var(--error-text); }
+        .status.info { background: var(--info-bg); color: var(--info-text); }
+
+        .tx-link { color: inherit; font-weight: 600; text-decoration: underline; word-break: break-all; }
+        .copy-btn {
+            background: rgba(0,0,0,0.1);
+            border: none;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-left: 8px;
+            color: inherit;
+        }
+        .copy-btn:hover { background: rgba(0,0,0,0.2); }
+
+        .protocol-warning {
+            background: #fffaf0;
+            color: #c05621;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #fbd38d;
+            font-size: 14px;
+        }
+        .protocol-warning strong { display: block; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Solana Memo Inscriber</h1>
+            <p class="subtitle">Write your message directly to the Solana blockchain (Gas fee only ~0.000005 SOL)</p>
+        </header>
+
+        <div id="protocolWarning" class="protocol-warning" style="display: none;">
+            <strong>⚠️ Local File Detected</strong>
+            Browser extensions don't work with file:// protocol. Please run a local server:<br>
+            <code>python -m http.server 8000</code> then visit <code>http://localhost:8000</code>
+        </div>
+
+        <div class="wallet-section">
+            <div class="wallet-info">
+                <div id="statusDot" class="status-dot"></div>
+                <strong>Wallet Status:</strong> 
+                <span id="walletStatus">Not Connected</span>
+            </div>
+            <div class="wallet-actions">
+                <div id="walletAddress" class="wallet-address" style="display:none;margin-right:12px;display:inline-block;"></div>
+                <button id="connectBtn" class="btn">Connect Wallet</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="panel">
+                <div class="panel-title">Inscribe Message</div>
+                <label for="messageInput">Your Message (Max 500 characters, 560 bytes):</label>
+                <textarea id="messageInput" placeholder="Type your message here..." maxlength="500"></textarea>
+                
+                <div class="meta-row">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="priorityToggle" checked>
+                        Use priority fee (50k µLamports)
+                    </label>
+                    <div id="charCount" class="char-count">0 / 500 chars</div>
+                </div>
+                
+                <button id="inscribeBtn" class="btn btn-full" disabled>Inscribe to Blockchain</button>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Lookup Memo</div>
+                <label for="txLookupInput">By Transaction Signature:</label>
+                <input id="txLookupInput" type="text" placeholder="Paste transaction signature...">
+                <button id="lookupBtn" class="btn btn-full">Fetch Memo</button>
+                <div id="lookupStatus" class="status" style="margin-top:16px;"></div>
+            </div>
+        </div>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+
+    <script>
+        const MEMO_PROGRAM_ID = 'Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo';
+        const MAX_BYTES = 560;
+        const MAX_CHARS = 500;
+
+        let wallet = null;
+        let publicKey = null;
+        let isConnected = false;
+
+        // Check for file:// protocol
+        if (window.location.protocol === 'file:') {
+            document.getElementById('protocolWarning').style.display = 'block';
+        }
+
+        const connectBtn = document.getElementById('connectBtn');
+        const inscribeBtn = document.getElementById('inscribeBtn');
+        const messageInput = document.getElementById('messageInput');
+        const walletStatus = document.getElementById('walletStatus');
+        const walletAddress = document.getElementById('walletAddress');
+        const statusDot = document.getElementById('statusDot');
+        const charCount = document.getElementById('charCount');
+        const status = document.getElementById('status');
+        const priorityToggle = document.getElementById('priorityToggle');
+        const txLookupInput = document.getElementById('txLookupInput');
+        const lookupBtn = document.getElementById('lookupBtn');
+        const lookupStatus = document.getElementById('lookupStatus');
+
+        // Copy signature buttons (event delegation)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.copy-btn');
+            if (!btn) return;
+            const sig = btn.getAttribute('data-sig');
+            if (!sig) return;
+            navigator.clipboard.writeText(sig).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+            }).catch(() => {
+                btn.textContent = 'Copy failed';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+            });
+        });
+
+        // Small base58 decoder (for memo data fallback)
+        function decodeBase58(str) {
+            const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+            const base = alphabet.length;
+            const bytes = [0];
+            for (let i = 0; i < str.length; i++) {
+                const c = alphabet.indexOf(str[i]);
+                if (c < 0) throw new Error('Invalid base58 char');
+                let carry = c;
+                for (let j = 0; j < bytes.length; ++j) {
+                    const val = bytes[j] * base + carry;
+                    bytes[j] = val & 0xff;
+                    carry = val >> 8;
+                }
+                while (carry > 0) {
+                    bytes.push(carry & 0xff);
+                    carry >>= 8;
+                }
+            }
+            return new Uint8Array(bytes.reverse());
+        }
+
+        function showStatus(type, message) {
+            status.className = `status ${type}`;
+            status.innerHTML = message; // Use innerHTML to support links
+            status.style.display = 'block';
+        }
+
+        function getWallet() {
+            return window.solana && (window.solana.isPhantom || typeof window.solana.connect === 'function') ? window.solana : null;
+        }
+
+        connectBtn.addEventListener('click', async () => {
+            if (isConnected) {
+                if (wallet && wallet.disconnect) await wallet.disconnect();
+                walletStatus.textContent = 'Not Connected';
+                walletAddress.style.display = 'none';
+                statusDot.classList.remove('connected');
+                connectBtn.textContent = 'Connect Wallet';
+                inscribeBtn.disabled = true;
+                publicKey = null;
+                isConnected = false;
+                return;
+            }
+
+            wallet = getWallet();
+            if (!wallet) {
+                showStatus('error', 'Phantom wallet not found. Make sure it\'s installed and the page is served via HTTP (not file://)');
+                return;
+            }
+
+            try {
+                showStatus('info', 'Connecting...');
+                const response = await wallet.connect();
+                publicKey = response.publicKey;
+                walletStatus.textContent = 'Connected';
+                statusDot.classList.add('connected');
+                walletAddress.textContent = `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`;
+                walletAddress.style.display = 'inline-block';
+                connectBtn.textContent = 'Disconnect';
+                isConnected = true;
+                status.style.display = 'none'; // Clear info message
+                
+                // Enable inscribe button if message is valid
+                const text = messageInput.value.trim();
+                const bytes = new TextEncoder().encode(text).length;
+                inscribeBtn.disabled = !text || bytes > MAX_BYTES;
+
+                wallet.on('disconnect', () => {
+                    walletStatus.textContent = 'Not Connected';
+                    walletAddress.style.display = 'none';
+                    statusDot.classList.remove('connected');
+                    connectBtn.textContent = 'Connect Wallet';
+                    inscribeBtn.disabled = true;
+                    publicKey = null;
+                    isConnected = false;
+                });
+            } catch (err) {
+                showStatus('error', 'Connection failed: ' + err.message);
+            }
+        });
+
+        messageInput.addEventListener('input', () => {
+            const text = messageInput.value;
+            const bytes = new TextEncoder().encode(text).length;
+            charCount.textContent = `${text.length} / ${MAX_CHARS} chars`;
+            
+            // Enable inscribe button if wallet is connected and message is valid
+            if (isConnected && text.trim() && bytes <= MAX_BYTES) {
+                inscribeBtn.disabled = false;
+            } else {
+                inscribeBtn.disabled = !isConnected || !text.trim() || bytes > MAX_BYTES;
+            }
+        });
+
+        inscribeBtn.addEventListener('click', async () => {
+            // 1. Basic Validation
+            const message = messageInput.value.trim();
+            if (!message || !publicKey) return showStatus('error', 'Connect wallet & enter message');
+            
+            const messageBytes = new TextEncoder().encode(message);
+            if (messageBytes.length > MAX_BYTES) return showStatus('error', 'Message too long');
+
+            try {
+                inscribeBtn.disabled = true;
+                showStatus('info', '⚡ Preparing High-Priority Transaction...');
+
+                // RPC endpoints (try in order, cors: prefix uses CORS proxy)
+                const rpcEndpoints = [
+                    'https://solana.drpc.org',
+                    'https://solana.api.onfinality.io/public',
+                    'cors:https://api.mainnet-beta.solana.com',
+                    'cors:https://rpc.ankr.com/solana'
+                ];
+
+                let blockhash = null;
+                let lastValidBlockHeight = null;
+                let rpcUrl = rpcEndpoints[0];
+
+                // 2. Fetch Blockhash (commitment: confirmed)
+                for (const endpoint of rpcEndpoints) {
+                    try {
+                        let target = endpoint;
+                        let isCorsProxy = false;
+                        if (endpoint.startsWith('cors:')) {
+                            const url = endpoint.replace('cors:', '');
+                            target = 'https://corsproxy.io/?' + encodeURIComponent(url);
+                            isCorsProxy = true;
+                        }
+                        console.log(`Trying RPC: ${endpoint}${isCorsProxy ? ' (via CORS proxy)' : ''}`);
+                        
+                        const resp = await fetch(target, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                jsonrpc: '2.0', id: 1, method: 'getLatestBlockhash', params: [{ commitment: 'confirmed' }]
+                            })
+                        });
+                        const data = await resp.json();
+                        if (data.result?.value?.blockhash) {
+                            blockhash = data.result.value.blockhash;
+                            lastValidBlockHeight = data.result.value.lastValidBlockHeight;
+                            rpcUrl = isCorsProxy ? target : endpoint; // Store the actual URL used
+                            console.log(`✅ Got blockhash from ${endpoint}:`, blockhash);
+                            break;
+                        } else if (data.error) {
+                            console.warn(`RPC error from ${endpoint}:`, data.error);
+                        }
+                    } catch (e) {
+                        console.warn(`Failed to reach ${endpoint}:`, e.message);
+                        // try next endpoint
+                    }
+                }
+
+                if (!blockhash) throw new Error('Could not fetch blockhash from any RPC endpoint.');
+
+                showStatus('info', '✍️ SIGN NOW! (Blockhash expires in ~60s)');
+
+                // 3. Build Transaction
+                const transaction = new solanaWeb3.Transaction({
+                    recentBlockhash: blockhash,
+                    feePayer: publicKey
+                });
+
+                // A. High priority fee (optional)
+                if (priorityToggle.checked) {
+                    transaction.add(
+                        solanaWeb3.ComputeBudgetProgram.setComputeUnitPrice({
+                            microLamports: 50000
+                        })
+                    );
+                }
+
+                // B. Memo Instruction
+                transaction.add(
+                    new solanaWeb3.TransactionInstruction({
+                        keys: [{ pubkey: publicKey, isSigner: true, isWritable: false }],
+                        programId: new solanaWeb3.PublicKey('Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo'),
+                        data: messageBytes
+                    })
+                );
+
+                // 4. Sign & Send via wallet (skipPreflight=false for better errors)
+                showStatus('info', '✍️ Please approve in wallet...');
+                const signatureResp = await wallet.signAndSendTransaction(transaction, { skipPreflight: false });
+                const sigString = typeof signatureResp === 'string' ? signatureResp : (signatureResp?.signature || signatureResp);
+
+                console.log("🚀 Broadcasted:", sigString);
+                showStatus('info', 'Transaction sent! Verifying on-chain...');
+                
+                // 5. Confirm transaction on-chain via HTTP polling (no websockets)
+                let verified = false;
+                // Build a list of confirmation endpoints (use direct first, CORS proxy as fallback)
+                const confirmEndpoints = [
+                    'https://solana.drpc.org',
+                    'https://solana.api.onfinality.io/public',
+                    'https://corsproxy.io/?' + encodeURIComponent('https://api.mainnet-beta.solana.com')
+                ];
+                
+                for (let attempt = 0; attempt < 15; attempt++) { // ~30s total
+                    await new Promise(r => setTimeout(r, 2000));
+                    
+                    for (const confirmUrl of confirmEndpoints) {
+                        try {
+                            const statusResp = await fetch(confirmUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    jsonrpc: '2.0',
+                                    id: 1,
+                                    method: 'getSignatureStatuses',
+                                    params: [[sigString], { searchTransactionHistory: true }]
+                                })
+                            });
+                            const statusData = await statusResp.json();
+                            const txStatus = statusData.result?.value?.[0];
+                            if (txStatus && (txStatus.confirmationStatus === 'confirmed' || txStatus.confirmationStatus === 'finalized')) {
+                                if (txStatus.err) {
+                                    throw new Error('Transaction failed on-chain: ' + JSON.stringify(txStatus.err));
+                                }
+                                verified = true;
+                                break;
+                            }
+                        } catch (verifyErr) {
+                            // try next endpoint
+                        }
+                    }
+                    if (verified) break;
+                }
+
+                if (!verified) {
+                    showStatus('info', 'Broadcasted. Final confirmation pending. Check Solscan link.');
+                } else {
+                    showStatus('success', 'Transaction confirmed on-chain!');
+                }
+                
+                // 6. Update UI
+                status.innerHTML += `<br><a href="https://solscan.io/tx/${sigString}" target="_blank" class="tx-link">View on Solscan: ${sigString}</a> <button class="copy-btn" data-sig="${sigString}" aria-label="Copy transaction signature">Copy</button>`;
+                inscribeBtn.textContent = "Inscribe Again";
+                inscribeBtn.disabled = false;
+
+            } catch (err) {
+                console.error("❌ FAILURE:", err);
+                showStatus('error', 'Error: ' + err.message);
+                inscribeBtn.disabled = false;
+                inscribeBtn.textContent = "Try Again";
+            }
+        });
+
+        // Lookup memo by transaction signature
+        lookupBtn.addEventListener('click', async () => {
+            const sig = txLookupInput.value.trim();
+            if (!sig) {
+                lookupStatus.className = 'status error';
+                lookupStatus.textContent = 'Please paste a transaction signature.';
+                lookupStatus.style.display = 'block';
+                return;
+            }
+
+            try {
+                lookupBtn.disabled = true;
+                lookupBtn.textContent = 'Fetching...';
+                lookupStatus.style.display = 'none';
+
+                const rpcEndpoints = [
+                    'https://solana.drpc.org',
+                    'https://solana.api.onfinality.io/public',
+                    'cors:https://api.mainnet-beta.solana.com',
+                    'cors:https://rpc.ankr.com/solana'
+                ];
+
+                let tx = null;
+                let usedRpc = rpcEndpoints[0];
+                for (const endpoint of rpcEndpoints) {
+                    try {
+                        let target = endpoint;
+                        let displayName = endpoint;
+                        if (endpoint.startsWith('cors:')) {
+                            const url = endpoint.replace('cors:', '');
+                            target = 'https://corsproxy.io/?' + encodeURIComponent(url);
+                            displayName = url + ' (via CORS proxy)';
+                        }
+                        console.log(`Lookup trying: ${displayName}`);
+                        const resp = await fetch(target, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                jsonrpc: '2.0',
+                                id: 1,
+                                method: 'getTransaction',
+                                params: [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }]
+                            })
+                        });
+                        const data = await resp.json();
+                        if (data.result) {
+                            tx = data.result;
+                            usedRpc = endpoint;
+                            break;
+                        }
+                    } catch (e) {
+                        // try next
+                    }
+                }
+
+                if (!tx) {
+                    throw new Error('Transaction not found on RPC nodes.');
+                }
+
+                // Find memo instruction
+                const memoIx = tx.transaction.message.instructions.find(ix => {
+                    try {
+                        return ix.program === 'spl-memo' || ix.programId === MEMO_PROGRAM_ID || ix.programId?.toString?.() === MEMO_PROGRAM_ID;
+                    } catch {
+                        return false;
+                    }
+                });
+
+                if (!memoIx) {
+                    throw new Error('No memo instruction found in this transaction.');
+                }
+
+                // Try parsed memo first
+                let memoText = memoIx.parsed || memoIx.info?.memo;
+                if (!memoText) {
+                    // Decode data if present
+                    const rawData = memoIx.data;
+                    if (!rawData) throw new Error('Memo instruction has no data.');
+                    try {
+                        const decoded = atob(rawData);
+                        memoText = new TextDecoder().decode(Uint8Array.from(decoded, c => c.charCodeAt(0)));
+                    } catch {
+                        // base58 fallback
+                        const bytes = decodeBase58(rawData);
+                        memoText = new TextDecoder().decode(bytes);
+                    }
+                }
+
+                lookupStatus.className = 'status success';
+                lookupStatus.innerHTML = `RPC: ${usedRpc}<br>Memo: ${memoText}`;
+                lookupStatus.style.display = 'block';
+            } catch (err) {
+                lookupStatus.className = 'status error';
+                lookupStatus.textContent = 'Error: ' + err.message;
+                lookupStatus.style.display = 'block';
+            } finally {
+                lookupBtn.disabled = false;
+                lookupBtn.textContent = 'Fetch Memo';
+            }
+        });
+
+        // Auto-connect if already connected
+        wallet = getWallet();
+        if (wallet && wallet.publicKey) {
+            publicKey = wallet.publicKey;
+            walletStatus.textContent = 'Connected';
+            statusDot.classList.add('connected');
+            walletAddress.textContent = `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`;
+            walletAddress.style.display = 'inline-block';
+            connectBtn.textContent = 'Disconnect';
+            isConnected = true;
+            
+            // Enable inscribe button if message is valid
+            const text = messageInput.value.trim();
+            const bytes = new TextEncoder().encode(text).length;
+            inscribeBtn.disabled = !text || bytes > MAX_BYTES;
+        }
+    </script>
+</body>
+</html>
