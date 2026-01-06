@@ -5,167 +5,127 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solana Memo Inscriber</title>
     <style>
-        :root {
-            --primary: #667eea;
-            --primary-dark: #5568d3;
-            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --surface: #ffffff;
-            --surface-alt: #f8f9fa;
-            --border: #e2e8f0;
-            --text-main: #2d3748;
-            --text-muted: #718096;
-            --success-bg: #c6f6d5;
-            --success-text: #2f855a;
-            --error-bg: #fed7d7;
-            --error-text: #c53030;
-            --info-bg: #bee3f8;
-            --info-text: #2b6cb0;
-            --radius: 12px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg-gradient);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            color: var(--text-main);
         }
-
         .container {
-            background: var(--surface);
+            background: white;
             border-radius: 16px;
-            padding: 40px;
-            max-width: 900px;
+            padding: 32px;
+            max-width: 600px;
             width: 100%;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
-
-        header { text-align: center; margin-bottom: 32px; }
-        h1 { color: var(--text-main); margin-bottom: 8px; font-size: 32px; letter-spacing: -0.5px; }
-        .subtitle { color: var(--text-muted); font-size: 16px; }
-
+        h1 { color: #333; margin-bottom: 8px; font-size: 28px; }
+        .subtitle { color: #666; margin-bottom: 24px; font-size: 14px; }
         .wallet-section {
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .wallet-status {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 24px;
-            background: var(--surface-alt);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            margin-bottom: 32px;
+            margin-bottom: 12px;
         }
-
-        .wallet-info { display: flex; align-items: center; gap: 12px; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; transition: background 0.3s; }
-        .status-dot.connected { background: #48bb78; }
-        
         .wallet-address {
-            font-family: 'Monaco', 'Consolas', monospace;
-            font-size: 13px;
-            color: var(--text-muted);
-            background: rgba(0,0,0,0.05);
-            padding: 4px 8px;
-            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
+            display: none;
         }
-
-        .btn {
-            background: var(--primary);
+        button {
+            background: #667eea;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
-            transition: all 0.2s;
-        }
-        .btn:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); }
-        .btn:active:not(:disabled) { transform: translateY(0); }
-        .btn:disabled { background: #cbd5e0; cursor: not-allowed; opacity: 0.7; }
-        .btn-full { width: 100%; padding: 12px; font-size: 16px; margin-top: 16px; }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
-
-        .panel {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .panel-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: var(--text-main); }
-
-        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: var(--text-main); }
-        
-        textarea, input[type="text"] {
             width: 100%;
+        }
+        button:hover:not(:disabled) { background: #5568d3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .input-row { display: flex; gap: 16px; flex-wrap: wrap; }
+        .input-section { margin-bottom: 24px; flex: 1 1 320px; }
+        .panel { background: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 12px; padding: 16px; }
+        label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; }
+        textarea {
+            width: 100%;
+            min-height: 120px;
             padding: 12px;
-            border: 2px solid var(--border);
+            border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-family: inherit;
             font-size: 14px;
-            transition: border-color 0.2s;
+            resize: vertical;
         }
-        textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--primary); }
-        textarea { min-height: 120px; resize: vertical; }
-
-        .meta-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 13px; color: var(--text-muted); }
-        
-        .toggle-label { display: flex; align-items: center; gap: 8px; cursor: pointer; -webkit-user-select: none; user-select: none; }
-        input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); }
-
+        textarea:focus { outline: none; border-color: #667eea; }
+        .char-count {
+            text-align: right;
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        .char-count.warning { color: #ff6b6b; }
+        .char-count.error { color: #dc3545; font-weight: 600; }
         .status {
-            margin-top: 24px;
-            padding: 16px;
-            border-radius: var(--radius);
-            font-size: 14px;
-            display: none;
-            line-height: 1.5;
-        }
-        .status.success { background: var(--success-bg); color: var(--success-text); }
-        .status.error { background: var(--error-bg); color: var(--error-text); }
-        .status.info { background: var(--info-bg); color: var(--info-text); }
-
-        .tx-link { color: inherit; font-weight: 600; text-decoration: underline; word-break: break-all; }
-        .copy-btn {
-            background: rgba(0,0,0,0.1);
-            border: none;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-            margin-left: 8px;
-            color: inherit;
-        }
-        .copy-btn:hover { background: rgba(0,0,0,0.2); }
-
-        .protocol-warning {
-            background: #fffaf0;
-            color: #c05621;
+            margin-top: 16px;
             padding: 12px;
             border-radius: 8px;
-            margin-bottom: 24px;
-            border: 1px solid #fbd38d;
             font-size: 14px;
+            display: none;
+        }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: block; }
+        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; display: block; }
+        .tx-link {
+            margin-top: 8px;
+            display: block;
+            color: #667eea;
+            text-decoration: none;
+            word-break: break-all;
+            font-size: 12px;
+        }
+        .tx-link:hover { text-decoration: underline; }
+        .copy-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 4px 10px;
+            font-size: 12px;
+            margin-left: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+        }
+        .copy-btn:hover { background: #cbd5e0; }
+        .protocol-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #ffc107;
         }
         .protocol-warning strong { display: block; margin-bottom: 4px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Solana Memo Inscriber</h1>
-            <p class="subtitle">Write your message directly to the Solana blockchain (Gas fee only ~0.000005 SOL)</p>
-        </header>
+        <h1>🔐 Solana Memo Inscriber</h1>
+        <p class="subtitle">Write your message directly to the Solana blockchain (Gas fee only ~0.000005 SOL)</p>
 
         <div id="protocolWarning" class="protocol-warning" style="display: none;">
             <strong>⚠️ Local File Detected</strong>
@@ -174,43 +134,31 @@
         </div>
 
         <div class="wallet-section">
-            <div class="wallet-info">
-                <div id="statusDot" class="status-dot"></div>
-                <strong>Wallet Status:</strong> 
-                <span id="walletStatus">Not Connected</span>
+            <div class="wallet-status">
+                <div><strong>Wallet Status:</strong> <span id="walletStatus">Not Connected</span></div>
+                <button id="connectBtn">Connect Wallet</button>
             </div>
-            <div class="wallet-actions">
-                <div id="walletAddress" class="wallet-address" style="display:none;margin-right:12px;display:inline-block;"></div>
-                <button id="connectBtn" class="btn">Connect Wallet</button>
-            </div>
+            <div id="walletAddress" class="wallet-address"></div>
         </div>
 
-        <div class="grid">
-            <div class="panel">
-                <div class="panel-title">Inscribe Message</div>
+        <div class="input-row">
+            <div class="input-section panel">
                 <label for="messageInput">Your Message (Max 500 characters, 560 bytes):</label>
                 <textarea id="messageInput" placeholder="Type your message here..." maxlength="500"></textarea>
-                
-                <div class="meta-row">
-                    <label class="toggle-label">
-                        <input type="checkbox" id="priorityToggle" checked>
-                        Use priority fee (50k µLamports)
-                    </label>
-                    <div id="charCount" class="char-count">0 / 500 chars</div>
-                </div>
-                
-                <button id="inscribeBtn" class="btn btn-full" disabled>Inscribe to Blockchain</button>
+                <div id="charCount" class="char-count">0 / 500 characters (0 bytes)</div>
+                <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px;color:#333;">
+                    <input type="checkbox" id="priorityToggle" checked style="width:16px;height:16px;">
+                    Use priority fee (50,000 µLamports) for higher reliability
+                </label>
+                <button id="inscribeBtn" disabled style="margin-top:12px;">Inscribe to Blockchain</button>
             </div>
-
-            <div class="panel">
-                <div class="panel-title">Lookup Memo</div>
-                <label for="txLookupInput">By Transaction Signature:</label>
-                <input id="txLookupInput" type="text" placeholder="Paste transaction signature...">
-                <button id="lookupBtn" class="btn btn-full">Fetch Memo</button>
-                <div id="lookupStatus" class="status" style="margin-top:16px;"></div>
+            <div class="input-section panel">
+                <label for="txLookupInput">Lookup Memo by Transaction Signature:</label>
+                <input id="txLookupInput" type="text" placeholder="Paste transaction signature" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;">
+                <button id="lookupBtn" style="margin-top:12px;">Fetch Memo</button>
+                <div id="lookupStatus" class="status" style="display:none;margin-top:12px;"></div>
             </div>
         </div>
-
         <div id="status" class="status"></div>
     </div>
 
@@ -235,7 +183,6 @@
         const messageInput = document.getElementById('messageInput');
         const walletStatus = document.getElementById('walletStatus');
         const walletAddress = document.getElementById('walletAddress');
-        const statusDot = document.getElementById('statusDot');
         const charCount = document.getElementById('charCount');
         const status = document.getElementById('status');
         const priorityToggle = document.getElementById('priorityToggle');
@@ -282,7 +229,7 @@
 
         function showStatus(type, message) {
             status.className = `status ${type}`;
-            status.innerHTML = message; // Use innerHTML to support links
+            status.textContent = message;
             status.style.display = 'block';
         }
 
@@ -295,7 +242,6 @@
                 if (wallet && wallet.disconnect) await wallet.disconnect();
                 walletStatus.textContent = 'Not Connected';
                 walletAddress.style.display = 'none';
-                statusDot.classList.remove('connected');
                 connectBtn.textContent = 'Connect Wallet';
                 inscribeBtn.disabled = true;
                 publicKey = null;
@@ -314,22 +260,20 @@
                 const response = await wallet.connect();
                 publicKey = response.publicKey;
                 walletStatus.textContent = 'Connected';
-                statusDot.classList.add('connected');
-                walletAddress.textContent = `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`;
-                walletAddress.style.display = 'inline-block';
+                walletAddress.textContent = `Address: ${publicKey.toString()}`;
+                walletAddress.style.display = 'block';
                 connectBtn.textContent = 'Disconnect';
                 isConnected = true;
-                status.style.display = 'none'; // Clear info message
                 
                 // Enable inscribe button if message is valid
                 const text = messageInput.value.trim();
                 const bytes = new TextEncoder().encode(text).length;
                 inscribeBtn.disabled = !text || bytes > MAX_BYTES;
+                status.style.display = 'none';
 
                 wallet.on('disconnect', () => {
                     walletStatus.textContent = 'Not Connected';
                     walletAddress.style.display = 'none';
-                    statusDot.classList.remove('connected');
                     connectBtn.textContent = 'Connect Wallet';
                     inscribeBtn.disabled = true;
                     publicKey = null;
@@ -343,7 +287,8 @@
         messageInput.addEventListener('input', () => {
             const text = messageInput.value;
             const bytes = new TextEncoder().encode(text).length;
-            charCount.textContent = `${text.length} / ${MAX_CHARS} chars`;
+            charCount.textContent = `${text.length} / ${MAX_CHARS} characters (${bytes} bytes)`;
+            charCount.className = bytes > MAX_BYTES ? 'char-count error' : bytes > MAX_BYTES * 0.9 ? 'char-count warning' : 'char-count';
             
             // Enable inscribe button if wallet is connected and message is valid
             if (isConnected && text.trim() && bytes <= MAX_BYTES) {
@@ -365,50 +310,79 @@
                 inscribeBtn.disabled = true;
                 showStatus('info', '⚡ Preparing High-Priority Transaction...');
 
-                // RPC endpoints (try in order, cors: prefix uses CORS proxy)
+                // RPC endpoints (try in order, no API keys required)
                 const rpcEndpoints = [
                     'https://solana.drpc.org',
+                    'https://solana.lavenderfive.com',
+                    'https://public.rpc.solanavibestation.com',
+                    'https://solana.leorpc.com/?api_key=FREE',
                     'https://solana.api.onfinality.io/public',
-                    'cors:https://api.mainnet-beta.solana.com',
-                    'cors:https://rpc.ankr.com/solana'
+                    'https://solana.api.pocket.network',
+                    'https://api.mainnet-beta.solana.com'
+                ];
+                
+                // CORS proxy fallbacks
+                const corsProxies = [
+                    'https://corsproxy.io/?',
+                    'https://api.allorigins.win/raw?url='
                 ];
 
                 let blockhash = null;
                 let lastValidBlockHeight = null;
                 let rpcUrl = rpcEndpoints[0];
 
-                // 2. Fetch Blockhash (commitment: confirmed)
-                for (const endpoint of rpcEndpoints) {
+                // Helper: try direct, then CORS proxies
+                async function tryFetchRpc(endpoint, body) {
+                    // Try direct first
                     try {
-                        let target = endpoint;
-                        let isCorsProxy = false;
-                        if (endpoint.startsWith('cors:')) {
-                            const url = endpoint.replace('cors:', '');
-                            target = 'https://corsproxy.io/?' + encodeURIComponent(url);
-                            isCorsProxy = true;
-                        }
-                        console.log(`Trying RPC: ${endpoint}${isCorsProxy ? ' (via CORS proxy)' : ''}`);
-                        
-                        const resp = await fetch(target, {
+                        const resp = await fetch(endpoint, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                jsonrpc: '2.0', id: 1, method: 'getLatestBlockhash', params: [{ commitment: 'confirmed' }]
-                            })
+                            body: JSON.stringify(body)
                         });
-                        const data = await resp.json();
-                        if (data.result?.value?.blockhash) {
-                            blockhash = data.result.value.blockhash;
-                            lastValidBlockHeight = data.result.value.lastValidBlockHeight;
-                            rpcUrl = isCorsProxy ? target : endpoint; // Store the actual URL used
-                            console.log(`✅ Got blockhash from ${endpoint}:`, blockhash);
-                            break;
-                        } else if (data.error) {
-                            console.warn(`RPC error from ${endpoint}:`, data.error);
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            if (data.result) return { data, url: endpoint };
                         }
                     } catch (e) {
-                        console.warn(`Failed to reach ${endpoint}:`, e.message);
-                        // try next endpoint
+                        console.warn('Direct failed:', endpoint, e.message);
+                    }
+                    
+                    // Try CORS proxies
+                    for (const proxy of corsProxies) {
+                        try {
+                            const proxyUrl = proxy + encodeURIComponent(endpoint);
+                            const resp = await fetch(proxyUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(body)
+                            });
+                            if (resp.ok) {
+                                const data = await resp.json();
+                                if (data.result) {
+                                    console.log('✅ Via CORS proxy:', proxy);
+                                    return { data, url: proxyUrl };
+                                }
+                            }
+                        } catch (e) {
+                            // try next proxy
+                        }
+                    }
+                    return null;
+                }
+
+                // 2. Fetch Blockhash (commitment: confirmed)
+                for (const endpoint of rpcEndpoints) {
+                    const result = await tryFetchRpc(endpoint, {
+                        jsonrpc: '2.0', id: 1, method: 'getLatestBlockhash', params: [{ commitment: 'confirmed' }]
+                    });
+                    
+                    if (result?.data?.result?.value?.blockhash) {
+                        blockhash = result.data.result.value.blockhash;
+                        lastValidBlockHeight = result.data.result.value.lastValidBlockHeight;
+                        rpcUrl = result.url;
+                        console.log('✅ Connected to:', endpoint);
+                        break;
                     }
                 }
 
@@ -450,42 +424,31 @@
                 
                 // 5. Confirm transaction on-chain via HTTP polling (no websockets)
                 let verified = false;
-                // Build a list of confirmation endpoints (use direct first, CORS proxy as fallback)
-                const confirmEndpoints = [
-                    'https://solana.drpc.org',
-                    'https://solana.api.onfinality.io/public',
-                    'https://corsproxy.io/?' + encodeURIComponent('https://api.mainnet-beta.solana.com')
-                ];
-                
                 for (let attempt = 0; attempt < 15; attempt++) { // ~30s total
                     await new Promise(r => setTimeout(r, 2000));
-                    
-                    for (const confirmUrl of confirmEndpoints) {
-                        try {
-                            const statusResp = await fetch(confirmUrl, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    jsonrpc: '2.0',
-                                    id: 1,
-                                    method: 'getSignatureStatuses',
-                                    params: [[sigString], { searchTransactionHistory: true }]
-                                })
-                            });
-                            const statusData = await statusResp.json();
-                            const txStatus = statusData.result?.value?.[0];
-                            if (txStatus && (txStatus.confirmationStatus === 'confirmed' || txStatus.confirmationStatus === 'finalized')) {
-                                if (txStatus.err) {
-                                    throw new Error('Transaction failed on-chain: ' + JSON.stringify(txStatus.err));
-                                }
-                                verified = true;
-                                break;
+                    try {
+                        const statusResp = await fetch(rpcUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                jsonrpc: '2.0',
+                                id: 1,
+                                method: 'getSignatureStatuses',
+                                params: [[sigString], { searchTransactionHistory: true }]
+                            })
+                        });
+                        const statusData = await statusResp.json();
+                        const status = statusData.result?.value?.[0];
+                        if (status && (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized')) {
+                            if (status.err) {
+                                throw new Error('Transaction failed on-chain: ' + JSON.stringify(status.err));
                             }
-                        } catch (verifyErr) {
-                            // try next endpoint
+                            verified = true;
+                            break;
                         }
+                    } catch (verifyErr) {
+                        // ignore and keep polling
                     }
-                    if (verified) break;
                 }
 
                 if (!verified) {
@@ -522,43 +485,78 @@
                 lookupBtn.textContent = 'Fetching...';
                 lookupStatus.style.display = 'none';
 
+                // RPC endpoints (try in order, no API keys required)
                 const rpcEndpoints = [
                     'https://solana.drpc.org',
+                    'https://solana.lavenderfive.com',
+                    'https://public.rpc.solanavibestation.com',
+                    'https://solana.leorpc.com/?api_key=FREE',
                     'https://solana.api.onfinality.io/public',
-                    'cors:https://api.mainnet-beta.solana.com',
-                    'cors:https://rpc.ankr.com/solana'
+                    'https://solana.api.pocket.network',
+                    'https://api.mainnet-beta.solana.com'
                 ];
+                
+                // CORS proxy fallbacks
+                const corsProxies = [
+                    'https://corsproxy.io/?',
+                    'https://api.allorigins.win/raw?url='
+                ];
+
+                // Helper: try direct, then CORS proxies
+                async function tryFetchLookup(endpoint, body) {
+                    // Try direct first
+                    try {
+                        const resp = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(body)
+                        });
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            if (data.result) return { data, url: endpoint };
+                        }
+                    } catch (e) {
+                        // Direct failed, try proxies
+                    }
+                    
+                    // Try CORS proxies
+                    for (const proxy of corsProxies) {
+                        try {
+                            const proxyUrl = proxy + encodeURIComponent(endpoint);
+                            const resp = await fetch(proxyUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(body)
+                            });
+                            if (resp.ok) {
+                                const data = await resp.json();
+                                if (data.result) {
+                                    console.log('✅ Lookup via CORS proxy:', proxy);
+                                    return { data, url: proxyUrl };
+                                }
+                            }
+                        } catch (e) {
+                            // try next proxy
+                        }
+                    }
+                    return null;
+                }
 
                 let tx = null;
                 let usedRpc = rpcEndpoints[0];
                 for (const endpoint of rpcEndpoints) {
-                    try {
-                        let target = endpoint;
-                        let displayName = endpoint;
-                        if (endpoint.startsWith('cors:')) {
-                            const url = endpoint.replace('cors:', '');
-                            target = 'https://corsproxy.io/?' + encodeURIComponent(url);
-                            displayName = url + ' (via CORS proxy)';
-                        }
-                        console.log(`Lookup trying: ${displayName}`);
-                        const resp = await fetch(target, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                jsonrpc: '2.0',
-                                id: 1,
-                                method: 'getTransaction',
-                                params: [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }]
-                            })
-                        });
-                        const data = await resp.json();
-                        if (data.result) {
-                            tx = data.result;
-                            usedRpc = endpoint;
-                            break;
-                        }
-                    } catch (e) {
-                        // try next
+                    const result = await tryFetchLookup(endpoint, {
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'getTransaction',
+                        params: [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }]
+                    });
+                    
+                    if (result?.data?.result) {
+                        tx = result.data.result;
+                        usedRpc = endpoint;
+                        console.log('✅ Lookup connected to:', endpoint);
+                        break;
                     }
                 }
 
@@ -613,9 +611,8 @@
         if (wallet && wallet.publicKey) {
             publicKey = wallet.publicKey;
             walletStatus.textContent = 'Connected';
-            statusDot.classList.add('connected');
-            walletAddress.textContent = `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`;
-            walletAddress.style.display = 'inline-block';
+            walletAddress.textContent = `Address: ${publicKey.toString()}`;
+            walletAddress.style.display = 'block';
             connectBtn.textContent = 'Disconnect';
             isConnected = true;
             
