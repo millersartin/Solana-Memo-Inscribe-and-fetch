@@ -1,6 +1,7 @@
 ![demo](demo1.png)
 
 
-A vibe coded demo showing how small chunks of data >560 bytes can be made permenant on solana for a almost nothing in gas. 
+A vibe coded demo showing how small chunks of data >560 bytes can be inscribed and then fetched from the blockchain on solana. 
 
-Demo includes function to fetch memo data from tx.
+This demo gets memo data through recent transactions of the recepiants wallet.
+
